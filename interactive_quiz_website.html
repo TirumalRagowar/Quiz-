@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Knowledge Quiz</title>
+    <!-- Load Tailwind CSS for responsive layout and modern utility styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Load Plus Jakarta Sans & Inter Google Fonts for refined aesthetic typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        /* Aesthetic Aurora & Frosted Glassmorphism Theme */
+        body {
+            font-family: 'Inter', sans-serif;
+            background: radial-gradient(circle at 15% 20%, #fae8ff 0%, transparent 45%),
+                        radial-gradient(circle at 85% 25%, #e0e7ff 0%, transparent 45%),
+                        radial-gradient(circle at 50% 90%, #ffe4e6 0%, transparent 50%),
+                        linear-gradient(135deg, #fdfbfb 0%, #f3f0f8 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1.25rem;
+            margin: 0;
+            color: #1e1b4b;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        h1, h2, .font-display {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        /* Ambient floating glow orbs */
+        body::before, body::after {
+            content: "";
+            position: fixed;
+            width: 22rem;
+            height: 22rem;
+            border-radius: 9999px;
+            filter: blur(75px);
+            z-index: -1;
+            opacity: 0.55;
+            pointer-events: none;
+            animation: floatOrb 12s ease-in-out infinite alternate;
+        }
+
+        body::before {
+            background: linear-gradient(135deg, #c084fc, #f472b6);
+            top: -5rem;
+            left: -4rem;
+        }
+
+        body::after {
+            background: linear-gradient(135deg, #818cf8, #fb7185);
+            bottom: -5rem;
+            right: -4rem;
+            animation-delay: -6s;
+        }
+
+        @keyframes floatOrb {
+            0% { transform: translate(0, 0) scale(1); }
+            100% { transform: translate(25px, 20px) scale(1.08); }
+        }
+
+        /* Dark mode aesthetic adaptation */
+        @media (prefers-color-scheme: dark) {
+            body {
+                background: radial-gradient(circle at 15% 20%, rgba(139, 92, 246, 0.22) 0%, transparent 45%),
+                            radial-gradient(circle at 85% 25%, rgba(236, 72, 153, 0.18) 0%, transparent 45%),
+                            radial-gradient(circle at 50% 90%, rgba(99, 102, 241, 0.2) 0%, transparent 50%),
+                            linear-gradient(135deg, #090814 0%, #131126 100%);
+                color: #f5f3ff;
+            }
+            body::before, body::after {
+                opacity: 0.3;
+            }
+        }
+
+        /* Frosted Glass Quiz Card Container */
+        .quiz-card {
+            background: rgba(255, 255, 255, 0.78);
+            backdrop-filter: blur(22px);
+            -webkit-backdrop-filter: blur(22px);
+            box-shadow: 0 25px 50px -12px rgba(76, 29, 149, 0.14),
+                        0 0 0 1px rgba(255, 255, 255, 0.75) inset;
+            transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.35s ease;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            .quiz-card {
+                background: rgba(23, 20, 44, 0.72);
+                box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.55),
+                            0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+            }
+        }
+
+        /* Gradient Progress Bar Animation */
+        .progress-fill {
+            background: linear-gradient(90deg, #8b5cf6 0%, #d946ef 50%, #f43f5e 100%);
+            transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Custom Radio Button & Aesthetic Pill Label Styling */
+        .option-label {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+            user-select: none;
+            background: rgba(255, 255, 255, 0.65);
+            border: 1.5px solid rgba(196, 181, 253, 0.45);
+        }
+
+        .option-label:hover {
+            transform: translateY(-2px);
+            border-color: #a855f7;
+            background: rgba(255, 255, 255, 0.95);
+            box-shadow: 0 10px 20px -8px rgba(139, 92, 246, 0.22);
+        }
+
+        /* Style the label when its child radio input is checked */
+        .option-label:has(input[type="radio"]:checked) {
+            border-color: #9333ea;
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.12) 0%, rgba(236, 72, 153, 0.1) 100%);
+            box-shadow: 0 8px 20px -6px rgba(147, 51, 234, 0.25);
+        }
+
+        @media (prefers-color-scheme: dark) {
+            .option-label {
+                background: rgba(30, 27, 56, 0.55);
+                border-color: rgba(139, 92, 246, 0.22);
+            }
+            .option-label:hover {
+                background: rgba(43, 38, 79, 0.85);
+                border-color: #c084fc;
+            }
+            .option-label:has(input[type="radio"]:checked) {
+                border-color: #e879f9;
+                background: linear-gradient(135deg, rgba(139, 92, 246, 0.25) 0%, rgba(236, 72, 153, 0.2) 100%);
+            }
+        }
+
+        /* Custom Radio Circle */
+        input[type="radio"].custom-radio {
+            appearance: none;
+            -webkit-appearance: none;
+            width: 1.3rem;
+            height: 1.3rem;
+            border: 2px solid #c4b5fd;
+            border-radius: 50%;
+            margin-right: 0.9rem;
+            display: grid;
+            place-content: center;
+            flex-shrink: 0;
+            transition: all 0.2s ease;
+        }
+
+        input[type="radio"].custom-radio::before {
+            content: "";
+            width: 0.65rem;
+            height: 0.65rem;
+            border-radius: 50%;
+            transform: scale(0);
+            transition: 150ms cubic-bezier(0.34, 1.56, 0.64, 1) transform;
+            background: linear-gradient(135deg, #8b5cf6, #ec4899);
+        }
+
+        input[type="radio"].custom-radio:checked {
+            border-color: #9333ea;
+        }
+
+        input[type="radio"].custom-radio:checked::before {
+            transform: scale(1);
+        }
+
+        @media (prefers-color-scheme: dark) {
+            input[type="radio"].custom-radio {
+                border-color: #6d28d9;
+            }
+            input[type="radio"].custom-radio::before {
+                background: linear-gradient(135deg, #c084fc, #f472b6);
+            }
+            input[type="radio"].custom-radio:checked {
+                border-color: #e879f9;
+            }
+        }
+
+        /* Aesthetic Gradient Action Button */
+        .aesthetic-btn {
+            background: linear-gradient(135deg, #7c3aed 0%, #c026d3 55%, #e11d48 100%);
+            background-size: 160% 160%;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 22px -6px rgba(192, 38, 211, 0.45);
+        }
+
+        .aesthetic-btn:hover {
+            background-position: right center;
+            transform: translateY(-1px);
+            box-shadow: 0 14px 26px -6px rgba(192, 38, 211, 0.6);
+        }
+
+        .aesthetic-btn:active {
+            transform: translateY(0);
+        }
+
+        /* Shake animation for validation feedback */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-6px); }
+            40%, 80% { transform: translateX(6px); }
+        }
+
+        .shake-error {
+            animation: shake 0.4s ease-in-out;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Main Aesthetic Frosted Quiz Card -->
+    <main id="quiz-container" class="quiz-card w-full max-w-xl rounded-3xl p-6 sm:p-9 border border-white/60 dark:border-violet-500/20">
+        
+        <!-- Start Page Section (Shown Initially) -->
+        <div id="start-screen" class="text-center py-4">
+            <!-- Hero Emblem Badge -->
+            <div class="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-gradient-to-tr from-violet-500/15 via-fuchsia-500/15 to-rose-500/15 border border-fuchsia-300/50 dark:border-fuchsia-500/30 text-violet-600 dark:text-violet-400 mb-6 shadow-inner">
+                <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
+                </svg>
+            </div>
+
+            <div class="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full text-xs font-semibold tracking-wide bg-violet-100/80 dark:bg-violet-950/80 text-violet-700 dark:text-violet-300 border border-violet-200/70 dark:border-violet-700/40 mb-4">
+                <span class="w-1.5 h-1.5 rounded-full bg-fuchsia-500 animate-pulse"></span>
+                Interactive Knowledge Challenge
+            </div>
+
+            <h1 class="text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-white mb-3 tracking-tight">
+                Web & Tech <span class="bg-gradient-to-r from-violet-600 via-fuchsia-600 to-rose-500 dark:from-violet-400 dark:via-fuchsia-400 dark:to-rose-400 bg-clip-text text-transparent">Trivia Quiz</span>
+            </h1>
+
+            <p class="text-slate-600 dark:text-violet-200/80 max-w-md mx-auto mb-7 leading-relaxed">
+                Test your web development fundamentals with 5 freshly randomized questions every round.
+            </p>
+
+            <!-- Quick Highlights Grid -->
+            <div class="grid grid-cols-3 gap-3 mb-8 text-left">
+                <div class="bg-white/60 dark:bg-slate-900/50 border border-violet-200/70 dark:border-violet-700/40 rounded-2xl p-3.5 backdrop-blur-md">
+                    <div class="text-xs font-semibold text-violet-600 dark:text-violet-400 mb-0.5">Length</div>
+                    <div class="font-display font-bold text-slate-900 dark:text-white text-sm sm:text-base">5 Questions</div>
+                </div>
+                <div class="bg-white/60 dark:bg-slate-900/50 border border-violet-200/70 dark:border-violet-700/40 rounded-2xl p-3.5 backdrop-blur-md">
+                    <div class="text-xs font-semibold text-fuchsia-600 dark:text-fuchsia-400 mb-0.5">Format</div>
+                    <div class="font-display font-bold text-slate-900 dark:text-white text-sm sm:text-base">Multiple Choice</div>
+                </div>
+                <div class="bg-white/60 dark:bg-slate-900/50 border border-violet-200/70 dark:border-violet-700/40 rounded-2xl p-3.5 backdrop-blur-md">
+                    <div class="text-xs font-semibold text-rose-600 dark:text-rose-400 mb-0.5">Deck</div>
+                    <div class="font-display font-bold text-slate-900 dark:text-white text-sm sm:text-base">Randomized</div>
+                </div>
+            </div>
+
+            <!-- Start Quiz Button -->
+            <button type="button" id="start-btn" class="aesthetic-btn w-full sm:w-auto px-9 py-4 text-white font-semibold rounded-2xl focus:outline-none focus:ring-2 focus:ring-fuchsia-400 focus:ring-offset-2 dark:focus:ring-offset-slate-900 inline-flex items-center justify-center gap-2">
+                <span>Start Quiz</span>
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path>
+                </svg>
+            </button>
+        </div>
+
+        <!-- Quiz Active Section (Hidden until Start Quiz is clicked) -->
+        <div id="quiz-screen" class="hidden">
+            <!-- Header & Progress Indicator -->
+            <header class="mb-7">
+                <div class="flex justify-between items-center mb-3">
+                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold tracking-wide bg-violet-100/80 dark:bg-violet-950/80 text-violet-700 dark:text-violet-300 border border-violet-200/70 dark:border-violet-700/40">
+                        <span class="w-1.5 h-1.5 rounded-full bg-fuchsia-500 animate-pulse"></span>
+                        Web & Tech Trivia
+                    </span>
+                    <span id="progress-text" class="text-sm font-semibold text-violet-900/70 dark:text-violet-200/80">
+                        Question 1 of 5
+                    </span>
+                </div>
+                
+                <!-- Visual Gradient Progress Bar -->
+                <div class="w-full h-2.5 bg-violet-100/90 dark:bg-slate-800/90 rounded-full overflow-hidden p-0.5">
+                    <div id="progress-bar" class="progress-fill h-full rounded-full" style="width: 20%;"></div>
+                </div>
+            </header>
+
+            <!-- Question Title -->
+            <section class="mb-7">
+                <h1 id="question-text" class="text-xl sm:text-2xl font-bold leading-snug text-slate-900 dark:text-white tracking-tight">
+                    Loading question...
+                </h1>
+            </section>
+
+            <!-- Answer Choices Form (Radio Buttons + Labels) -->
+            <form id="options-form" class="space-y-3.5 mb-7" aria-label="Answer choices">
+                <!-- Radio options will be dynamically injected here -->
+            </form>
+
+            <!-- Inline Validation Error Message Box (Replaces alert()) -->
+            <div id="error-message" role="alert" class="hidden mb-5 p-3.5 rounded-2xl bg-rose-50/90 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-800/70 text-rose-600 dark:text-rose-300 text-sm font-medium flex items-center gap-2.5">
+                <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                <span>Please select an answer before advancing to the next question.</span>
+            </div>
+
+            <!-- Action Footer -->
+            <footer class="flex justify-end pt-3 border-t border-violet-200/50 dark:border-violet-800/40">
+                <button type="button" id="next-btn" class="aesthetic-btn w-full sm:w-auto px-7 py-3.5 text-white font-semibold rounded-2xl focus:outline-none focus:ring-2 focus:ring-fuchsia-400 focus:ring-offset-2 dark:focus:ring-offset-slate-900">
+                    Next Question
+                </button>
+            </footer>
+        </div>
+
+        <!-- Final Results Section (Hidden initially) -->
+        <div id="result-screen" class="hidden text-center py-4">
+            <!-- Trophy / Score Badge -->
+            <div class="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-gradient-to-tr from-violet-500/15 via-fuchsia-500/15 to-rose-500/15 border border-fuchsia-300/50 dark:border-fuchsia-500/30 text-fuchsia-600 dark:text-fuchsia-400 mb-5 shadow-inner">
+                <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+            </div>
+
+            <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white mb-2 tracking-tight">
+                Quiz Completed!
+            </h2>
+            <p id="feedback-message" class="text-slate-600 dark:text-violet-200/80 mb-7">
+                Great job completing the quiz.
+            </p>
+
+            <!-- Score Display Card -->
+            <div class="bg-white/60 dark:bg-slate-900/50 border border-violet-200/70 dark:border-violet-700/40 rounded-3xl p-6 mb-8 backdrop-blur-md">
+                <div class="text-xs font-bold uppercase tracking-widest text-violet-600 dark:text-violet-400 mb-1.5">
+                    Your Final Score
+                </div>
+                <div id="score-display" class="font-display text-4xl sm:text-5xl font-extrabold bg-gradient-to-r from-violet-600 via-fuchsia-600 to-rose-500 dark:from-violet-400 dark:via-fuchsia-400 dark:to-rose-400 bg-clip-text text-transparent">
+                    0 / 5
+                </div>
+                <div id="percentage-display" class="text-sm font-semibold text-slate-500 dark:text-slate-400 mt-2">
+                    0% Accuracy
+                </div>
+            </div>
+
+            <!-- Restart Quiz Button -->
+            <button type="button" id="restart-btn" class="aesthetic-btn w-full sm:w-auto px-8 py-3.5 text-white font-semibold rounded-2xl focus:outline-none focus:ring-2 focus:ring-fuchsia-400 focus:ring-offset-2 dark:focus:ring-offset-slate-900">
+                Restart Quiz
+            </button>
+        </div>
+
+    </main>
+
+    <script>
+        /**
+         * Expanded Question Bank stored in parallel JavaScript arrays.
+         * Every session randomly picks and shuffles 5 questions from this bank.
+         */
+        const questionBank = [
+            "Which HTML element is used to define an interactive radio button?",
+            "Which CSS property is commonly used to create space inside an element's border?",
+            "In JavaScript, which method attaches an event handler to a specific element?",
+            "What does DOM stand for in web development?",
+            "Which HTTP status code indicates that a requested webpage was not found?",
+            "Which HTML tag is used to link an external JavaScript file?",
+            "In CSS Flexbox, which property aligns items along the main axis?",
+            "Which JavaScript keyword declares a block-scoped variable that cannot be reassigned?",
+            "What does CSS stand for?",
+            "Which HTML attribute provides alternative text for an image if it cannot be displayed?",
+            "Which JavaScript array method creates a new array with the results of calling a function on every element?",
+            "Which CSS property controls the text size of an element?",
+            "What is the correct HTML element for the largest heading?",
+            "Which protocol is used to secure data transmitted over the web with encryption?",
+            "In JavaScript, what will `typeof []` evaluate to?"
+        ];
+
+        const choicesBank = [
+            ["<input type='radio'>", "<radio>", "<input type='check'>", "<select type='radio'>"],
+            ["margin", "padding", "spacing", "border-gap"],
+            ["attachEventListener()", "onClickEvent()", "addEventListener()", "listenToEvent()"],
+            ["Document Object Model", "Data Object Management", "Digital Ordinance Model", "Document Orientation Mode"],
+            ["200 OK", "301 Moved Permanently", "404 Not Found", "500 Internal Server Error"],
+            ["<script>", "<js>", "<javascript>", "<link>"],
+            ["align-items", "justify-content", "flex-direction", "align-content"],
+            ["var", "let", "const", "static"],
+            ["Cascading Style Sheets", "Computer Style Syntax", "Creative Styling System", "Colorful Sheet Styles"],
+            ["title", "src", "alt", "caption"],
+            ["forEach()", "filter()", "map()", "reduce()"],
+            ["font-style", "text-size", "font-size", "text-style"],
+            ["<heading>", "<h6>", "<head>", "<h1>"],
+            ["HTTP", "FTP", "HTTPS", "SMTP"],
+            ["array", "object", "list", "undefined"]
+        ];
+
+        // Zero-based index of the correct choice for each question in the bank
+        const correctAnswersBank = [0, 1, 2, 0, 2, 0, 1, 2, 0, 2, 2, 2, 3, 2, 1];
+
+        // Active 5-question arrays populated freshly on every quiz start/restart
+        const QUIZ_LENGTH = 5;
+        let questions = [];
+        let choices = [];
+        let correctAnswers = [];
+
+        // Quiz State Variables
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let lastQuizIndices = [];
+
+        // DOM Element References
+        const startScreen = document.getElementById("start-screen");
+        const startBtn = document.getElementById("start-btn");
+        const quizScreen = document.getElementById("quiz-screen");
+        const resultScreen = document.getElementById("result-screen");
+        const progressText = document.getElementById("progress-text");
+        const progressBar = document.getElementById("progress-bar");
+        const questionText = document.getElementById("question-text");
+        const optionsForm = document.getElementById("options-form");
+        const errorMessage = document.getElementById("error-message");
+        const nextBtn = document.getElementById("next-btn");
+        const scoreDisplay = document.getElementById("score-display");
+        const percentageDisplay = document.getElementById("percentage-display");
+        const feedbackMessage = document.getElementById("feedback-message");
+        const restartBtn = document.getElementById("restart-btn");
+
+        /**
+         * Selects 5 random, non-repeating questions from the question bank
+         * and shuffles their answer choices so every quiz attempt feels unique.
+         */
+        function generateRandomQuiz() {
+            // Build an array of all available indices [0, 1, ..., questionBank.length - 1]
+            const allIndices = questionBank.map((_, idx) => idx);
+
+            // Prefer questions not used in the immediately preceding quiz if possible
+            let candidateIndices = allIndices.filter(idx => !lastQuizIndices.includes(idx));
+            if (candidateIndices.length < QUIZ_LENGTH) {
+                candidateIndices = [...allIndices];
+            }
+
+            // Fisher-Yates shuffle on candidate indices
+            for (let i = candidateIndices.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [candidateIndices[i], candidateIndices[j]] = [candidateIndices[j], candidateIndices[i]];
+            }
+
+            // Pick the first 5 indices
+            const selectedIndices = candidateIndices.slice(0, QUIZ_LENGTH);
+            lastQuizIndices = selectedIndices;
+
+            // Reset active quiz arrays
+            questions = [];
+            choices = [];
+            correctAnswers = [];
+
+            selectedIndices.forEach((bankIndex) => {
+                questions.push(questionBank[bankIndex]);
+
+                // Also shuffle the 4 answer choices while tracking the correct answer
+                const originalChoices = choicesBank[bankIndex];
+                const correctChoiceText = originalChoices[correctAnswersBank[bankIndex]];
+
+                const shuffledChoices = [...originalChoices];
+                for (let i = shuffledChoices.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [shuffledChoices[i], shuffledChoices[j]] = [shuffledChoices[j], shuffledChoices[i]];
+                }
+
+                choices.push(shuffledChoices);
+                correctAnswers.push(shuffledChoices.indexOf(correctChoiceText));
+            });
+        }
+
+        /**
+         * Renders the current question and its radio button options into the DOM.
+         */
+        function loadQuestion() {
+            try {
+                // Hide any previous validation error
+                hideError();
+
+                // Update progress indicator text and visual bar width
+                const totalQuestions = questions.length;
+                const currentNumber = currentQuestionIndex + 1;
+                progressText.textContent = `Question ${currentNumber} of ${totalQuestions}`;
+                
+                const progressPercent = (currentNumber / totalQuestions) * 100;
+                progressBar.style.width = `${progressPercent}%`;
+
+                // Set the question heading
+                questionText.textContent = questions[currentQuestionIndex];
+
+                // Clear previous answer options
+                optionsForm.innerHTML = "";
+
+                // Generate HTML radio buttons and labels for the current question's choices
+                const currentChoices = choices[currentQuestionIndex];
+                currentChoices.forEach((choiceText, index) => {
+                    const optionId = `option-${index}`;
+
+                    // Create label wrapper
+                    const label = document.createElement("label");
+                    label.setAttribute("for", optionId);
+                    label.className = "option-label p-4 rounded-2xl text-slate-800 dark:text-slate-100 font-medium";
+
+                    // Create radio input
+                    const radioInput = document.createElement("input");
+                    radioInput.type = "radio";
+                    radioInput.id = optionId;
+                    radioInput.name = "quiz-answer";
+                    radioInput.value = index;
+                    radioInput.className = "custom-radio";
+
+                    // Hide error message automatically once user picks an option
+                    radioInput.addEventListener("change", hideError);
+
+                    // Create span for option text (safely escaped via textContent)
+                    const textSpan = document.createElement("span");
+                    textSpan.textContent = choiceText;
+
+                    // Assemble label and append to form
+                    label.appendChild(radioInput);
+                    label.appendChild(textSpan);
+                    optionsForm.appendChild(label);
+                });
+
+                // Update button label on the final question
+                if (currentQuestionIndex === totalQuestions - 1) {
+                    nextBtn.textContent = "Finish Quiz";
+                } else {
+                    nextBtn.textContent = "Next Question";
+                }
+            } catch (error) {
+                console.error("Error loading question:", error);
+            }
+        }
+
+        /**
+         * Displays the inline validation warning when no radio button is selected.
+         */
+        function showError() {
+            errorMessage.classList.remove("hidden");
+            // Re-trigger shake animation
+            errorMessage.classList.remove("shake-error");
+            void errorMessage.offsetWidth; // Force reflow
+            errorMessage.classList.add("shake-error");
+        }
+
+        /**
+         * Hides the inline validation warning.
+         */
+        function hideError() {
+            errorMessage.classList.add("hidden");
+        }
+
+        /**
+         * Handles advancing to the next question or completing the quiz.
+         */
+        function handleNextClick() {
+            try {
+                // Find the checked radio button
+                const selectedOption = document.querySelector('input[name="quiz-answer"]:checked');
+
+                // Prevent advancing without selecting an answer
+                if (!selectedOption) {
+                    showError();
+                    return;
+                }
+
+                // Check if the selected answer matches the correct answer index
+                const selectedIndex = parseInt(selectedOption.value, 10);
+                if (selectedIndex === correctAnswers[currentQuestionIndex]) {
+                    score++;
+                }
+
+                // Advance index or show final results
+                currentQuestionIndex++;
+                if (currentQuestionIndex < questions.length) {
+                    loadQuestion();
+                } else {
+                    showResults();
+                }
+            } catch (error) {
+                console.error("Error processing answer:", error);
+            }
+        }
+
+        /**
+         * Displays the final score screen with accuracy percentage and custom feedback.
+         */
+        function showResults() {
+            quizScreen.classList.add("hidden");
+            resultScreen.classList.remove("hidden");
+
+            const total = questions.length;
+            const percentage = Math.round((score / total) * 100);
+
+            scoreDisplay.textContent = `${score} / ${total}`;
+            percentageDisplay.textContent = `${percentage}% Accuracy`;
+
+            if (score === total) {
+                feedbackMessage.textContent = "Perfect score! You mastered every single question.";
+            } else if (score >= 3) {
+                feedbackMessage.textContent = "Well done! You have a solid grasp of the fundamentals.";
+            } else {
+                feedbackMessage.textContent = "Good effort! Click below to try again and improve your score.";
+            }
+        }
+
+        /**
+         * Starts a fresh quiz session from the Start Page.
+         */
+        function startQuiz() {
+            currentQuestionIndex = 0;
+            score = 0;
+            generateRandomQuiz();
+            startScreen.classList.add("hidden");
+            resultScreen.classList.add("hidden");
+            quizScreen.classList.remove("hidden");
+            loadQuestion();
+        }
+
+        /**
+         * Resets quiz state, generates a brand-new set of 5 random questions, and returns to question 1.
+         */
+        function restartQuiz() {
+            startQuiz();
+        }
+
+        // Attach click event listeners
+        startBtn.addEventListener("click", startQuiz);
+        nextBtn.addEventListener("click", handleNextClick);
+        restartBtn.addEventListener("click", restartQuiz);
+    </script>
+</body>
+</html>
